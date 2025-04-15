@@ -1,32 +1,48 @@
 
-// Simulação de API para geração de keys
-
-// Função para gerar uma key aleatória
-export function generateRandomKey(length: number = 16): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let key = '';
-  
-  for (let i = 0; i < length; i++) {
-    key += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  
-  // Formatando a key em grupos de 4 caracteres
-  return key.match(/.{1,4}/g)?.join('-') || key;
+interface KeyResponse {
+  key: string;
+  expiresIn: number;
 }
 
-// Função que simula uma chamada de API para geração de key
-export async function generateKey(): Promise<{ key: string; expiresIn: number }> {
-  // Simula o tempo de resposta de uma API real
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Gera uma key aleatória
-      const key = generateRandomKey();
-      
-      // Define um tempo de expiração aleatório entre 30 minutos e 24 horas (em segundos)
-      // Para teste, vamos reduzir para entre 1 e 5 minutos
-      const expiresIn = Math.floor(Math.random() * (300 - 60 + 1)) + 60;
-      
-      resolve({ key, expiresIn });
-    }, 800);
-  });
+const API_URL = 'https://key-api.onrender.com/api/keys/generate';
+const JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiY2Fpb2FudHVuZXMiLCJpYXQiOjE3NDI0MDY2NTEsImV4cCI6MTc0MjQxMDI1MX0.Y0hs_VOBSKOiZELNu5H5Dx3FJmU0ndxOEZHoabsdtu0';
+
+export async function generateKey(): Promise<KeyResponse> {
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${JWT_TOKEN}`
+      },
+      body: JSON.stringify({
+        duration: 1 // duration in hours
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate key');
+    }
+
+    const data = await response.json();
+    return {
+      key: data.key,
+      expiresIn: data.expiresIn
+    };
+  } catch (error) {
+    console.error('Error generating key:', error);
+    throw error;
+  }
+}
+
+// Function to handle linkvertise redirect
+export function createLinkvertiseUrl(step: number): string {
+  // Replace these with your actual linkvertise URLs
+  const urls = [
+    "https://linkvertise.com/YOUR_ID/1",
+    "https://linkvertise.com/YOUR_ID/2",
+    "https://linkvertise.com/YOUR_ID/3"
+  ];
+  
+  return urls[step] || "";
 }

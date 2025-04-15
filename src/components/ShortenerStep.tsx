@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { ExternalLink, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createLinkvertiseUrl } from "@/services/api";
 
 interface ShortenerStepProps {
   stepNumber: number;
-  url: string;
   onComplete: () => void;
   isActive: boolean;
   isCompleted: boolean;
@@ -14,34 +14,38 @@ interface ShortenerStepProps {
 
 export function ShortenerStep({
   stepNumber,
-  url,
   onComplete,
   isActive,
   isCompleted
 }: ShortenerStepProps) {
   const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(5);
 
-  // Simulando o processo de encurtador com um temporizador
+  // Handle linkvertise redirect completion
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    
-    if (isActive && loading && timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prevTimer) => prevTimer - 1);
-      }, 1000);
-    } else if (isActive && loading && timer === 0) {
-      setLoading(false);
-      onComplete();
-    }
-    
-    return () => clearInterval(interval);
-  }, [isActive, loading, timer, onComplete]);
+    const handleLinkvertiseReturn = () => {
+      // Check if this is a return from linkvertise
+      const params = new URLSearchParams(window.location.search);
+      const completedStep = params.get('step');
+      
+      if (completedStep && parseInt(completedStep) === stepNumber) {
+        setLoading(false);
+        onComplete();
+        
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+
+    handleLinkvertiseReturn();
+  }, [stepNumber, onComplete]);
 
   const handleClick = () => {
     if (!isActive || isCompleted) return;
     setLoading(true);
-    window.open(url, '_blank');
+    
+    // Generate linkvertise URL and redirect
+    const linkvertiseUrl = createLinkvertiseUrl(stepNumber - 1);
+    window.location.href = linkvertiseUrl;
   };
 
   return (
@@ -58,7 +62,7 @@ export function ShortenerStep({
           )}>
             {isCompleted ? <Check size={16} /> : stepNumber}
           </div>
-          <h3 className="font-medium">Encurtador {stepNumber}</h3>
+          <h3 className="font-medium">Linkvertise {stepNumber}</h3>
         </div>
         
         <Button 
@@ -72,16 +76,16 @@ export function ShortenerStep({
           )}
         >
           {isCompleted ? (
-            "Concluído"
+            "Completed"
           ) : loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Aguarde {timer}s
+              Processing...
             </>
           ) : (
             <>
               <ExternalLink className="mr-2 h-4 w-4" />
-              Acessar Link
+              Visit Link
             </>
           )}
         </Button>
