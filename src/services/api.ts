@@ -44,5 +44,9 @@ export function createLinkvertiseUrl(step: number): string {
     "https://linkvertise.com/YOUR_ID/3"
   ];
   
-  return urls[step] || "";
+  // Add the step parameter to help with redirect completion detection
+  const url = new URL(urls[step] || "");
+  url.searchParams.append('redirectto', `${window.location.origin}?step=${step + 1}`);
+  
+  return url.toString();
 }
