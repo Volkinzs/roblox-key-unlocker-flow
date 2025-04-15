@@ -1,4 +1,3 @@
-
 interface KeyResponse {
   key: string;
   expiresIn: number;
@@ -35,16 +34,15 @@ export async function generateKey(): Promise<KeyResponse> {
   }
 }
 
-// Function to handle linkvertise redirect
 export function createLinkvertiseUrl(step: number): string {
-  // Replace these with your actual linkvertise URLs
+  // Substitua estes IDs pelos seus IDs reais do Linkvertise
   const urls = [
     "https://linkvertise.com/YOUR_ID/1",
     "https://linkvertise.com/YOUR_ID/2",
     "https://linkvertise.com/YOUR_ID/3"
   ];
   
-  // Add the step parameter to help with redirect completion detection
+  // Adiciona o parâmetro step para ajudar na detecção de conclusão do redirecionamento
   const url = new URL(urls[step] || "");
   url.searchParams.append('redirectto', `${window.location.origin}?step=${step + 1}`);
   
