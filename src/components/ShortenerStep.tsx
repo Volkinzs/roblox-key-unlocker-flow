@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ExternalLink, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createLinkvertiseUrl } from "@/services/api";
+import { toast } from "@/components/ui/use-toast";
 
 interface ShortenerStepProps {
   stepNumber: number;
@@ -22,8 +23,7 @@ export function ShortenerStep({
 
   // Handle linkvertise redirect completion
   useEffect(() => {
-    const handleLinkvertiseReturn = () => {
-      // Check if this is a return from linkvertise
+    const checkUrlForCompletion = () => {
       const params = new URLSearchParams(window.location.search);
       const completedStep = params.get('step');
       
@@ -31,12 +31,30 @@ export function ShortenerStep({
         setLoading(false);
         onComplete();
         
-        // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname);
+        // Show success toast
+        toast({
+          title: "Step completed!",
+          description: `You've completed step ${stepNumber} successfully.`
+        });
+        
+        // Clean up URL - remove only the step parameter
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('step');
+        newUrl.searchParams.delete('t');
+        window.history.replaceState({}, '', newUrl.toString());
       }
     };
 
-    handleLinkvertiseReturn();
+    // Check on component mount and URL changes
+    checkUrlForCompletion();
+
+    // Set up listener for URL changes (like browser back/forward)
+    const handlePopState = () => checkUrlForCompletion();
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, [stepNumber, onComplete]);
 
   const handleClick = () => {
@@ -44,8 +62,29 @@ export function ShortenerStep({
     setLoading(true);
     
     // Generate linkvertise URL and redirect
-    const linkvertiseUrl = createLinkvertiseUrl(stepNumber - 1);
-    window.location.href = linkvertiseUrl;
+    try {
+      const linkvertiseUrl = createLinkvertiseUrl(stepNumber - 1);
+      
+      // Log the URL for debugging
+      console.log(`Redirecting to Linkvertise URL for step ${stepNumber}:`, linkvertiseUrl);
+      
+      // Open in a new tab
+      window.open(linkvertiseUrl, '_blank');
+      
+      // Inform user to complete the step in the new tab
+      toast({
+        title: "Link opened in new tab",
+        description: "Complete the Linkvertise steps in the new tab and return to this page."
+      });
+    } catch (error) {
+      console.error("Error creating Linkvertise URL:", error);
+      setLoading(false);
+      toast({
+        title: "Error",
+        description: "Failed to create verification link. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -68,7 +107,7 @@ export function ShortenerStep({
         <Button 
           variant={isCompleted ? "outline" : "default"}
           size="sm" 
-          disabled={!isActive || loading || isCompleted}
+          disabled={!isActive || isCompleted}
           onClick={handleClick}
           className={cn(
             "transition-all",

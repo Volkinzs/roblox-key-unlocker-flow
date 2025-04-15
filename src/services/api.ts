@@ -1,3 +1,4 @@
+
 interface KeyResponse {
   key: string;
   expiresIn: number;
@@ -35,16 +36,31 @@ export async function generateKey(): Promise<KeyResponse> {
 }
 
 export function createLinkvertiseUrl(step: number): string {
-  // Substitua estes IDs pelos seus IDs reais do Linkvertise
-  const urls = [
-    "https://linkvertise.com/YOUR_ID/1",
-    "https://linkvertise.com/YOUR_ID/2",
-    "https://linkvertise.com/YOUR_ID/3"
+  // Random Linkvertise URLs - you can replace these with your own
+  const linkIds = [
+    "388344",  // Replace with your Linkvertise ID
+    "462923",  // Replace with your Linkvertise ID
+    "271075"   // Replace with your Linkvertise ID
   ];
   
-  // Adiciona o parâmetro step para ajudar na detecção de conclusão do redirecionamento
-  const url = new URL(urls[step] || "");
-  url.searchParams.append('redirectto', `${window.location.origin}?step=${step + 1}`);
+  // Random link numbers
+  const linkNumbers = [
+    Math.floor(Math.random() * 5) + 1,  // Random number between 1-5
+    Math.floor(Math.random() * 5) + 1,  // Random number between 1-5
+    Math.floor(Math.random() * 5) + 1   // Random number between 1-5
+  ];
+  
+  // Base URL
+  const baseUrl = `https://linkvertise.com/${linkIds[step]}/${linkNumbers[step]}`;
+  
+  // Create a proper redirect URL with a timestamp to prevent caching issues
+  const timestamp = new Date().getTime();
+  const redirectUrl = `${window.location.origin}/?step=${step + 1}&t=${timestamp}`;
+  
+  // Build the full URL with the redirect parameter
+  const url = new URL(baseUrl);
+  url.searchParams.append('o', '1'); // Optional: adds the 'o' parameter that Linkvertise sometimes uses
+  url.searchParams.append('to', encodeURIComponent(redirectUrl));
   
   return url.toString();
 }
