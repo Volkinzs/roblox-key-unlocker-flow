@@ -1,3 +1,4 @@
+
 interface KeyResponse {
   key: string;
   expiresIn: number;
@@ -35,16 +36,20 @@ export async function generateKey(): Promise<KeyResponse> {
 }
 
 export function createLinkvertiseUrl(step: number): string {
-  // Substitua estes IDs pelos seus IDs reais do Linkvertise
+  // Função para gerar um ID linkvertise aleatório
+  const generateRandomLinkvertiseId = () => {
+    return Math.floor(Math.random() * 1000000);
+  };
+
   const urls = [
-    "https://linkvertise.com/YOUR_ID/1",
-    "https://linkvertise.com/YOUR_ID/2",
-    "https://linkvertise.com/YOUR_ID/3"
+    `https://linkvertise.com/${generateRandomLinkvertiseId()}/1`,
+    `https://linkvertise.com/${generateRandomLinkvertiseId()}/2`,
+    `https://linkvertise.com/${generateRandomLinkvertiseId()}/3`
   ];
   
-  // Adiciona o parâmetro step para ajudar na detecção de conclusão do redirecionamento
   const url = new URL(urls[step] || "");
   url.searchParams.append('redirectto', `${window.location.origin}?step=${step + 1}`);
   
   return url.toString();
 }
+
